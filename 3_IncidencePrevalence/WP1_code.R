@@ -89,12 +89,13 @@ calculate_IP <- function(base_id, outcome_id, tableBase, tableOutcome, stem) {
   cdm$outcome <- cdm[[tableOutcome]] %>%
     dplyr::filter(.data$cohort_definition_id == i)
   if(cdm$outcome %>% tally() %>% pull() != 0) {
-    inc <- IncidencePrevalence::estimateIncidence(
+    inc <- estimateIncidence(
       cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", 
+      outcomeCohortId = i, 
       interval = c("years","months"),
       repeatedEvents = FALSE, completeDatabaseIntervals = FALSE, minCellCount = 5)
     
-    study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+    study_results <- gatherIncidencePrevalenceResults(
       cdm=cdm, resultList=list(inc))
     
     IncidencePrevalence::exportIncidencePrevalenceResults(
@@ -118,12 +119,13 @@ calculate_IP <- function(base_id, outcome_id, tableBase, tableOutcome, stem) {
   cdm$outcome <- cdm[[tableOutcome]] %>%
     dplyr::filter(.data$cohort_definition_id == i)
   if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
+  inc <- estimateIncidence(
     cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", 
+    outcomeCohortId = i,
     interval = c("years","months"),repeatedEvents = FALSE,
     completeDatabaseIntervals = FALSE, minCellCount = 5)
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   IncidencePrevalence::exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0(base_name,"_",stem,"_",i,"_Age"),
@@ -156,12 +158,13 @@ calculate_IP <- function(base_id, outcome_id, tableBase, tableOutcome, stem) {
     cdm$outcome <- cdm[[tableOutcome]] %>%
       dplyr::filter(.data$cohort_definition_id == i)
     if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
-    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", 
+  inc <-estimateIncidence(
+    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome",
+    outcomeCohortId = i,
     interval = c("years","months"),repeatedEvents = FALSE,
     completeDatabaseIntervals = FALSE, minCellCount = 5)
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   IncidencePrevalence::exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0(base_name,"_",stem,"_",i,"_Vacc"),
@@ -182,12 +185,13 @@ calculate_IP <- function(base_id, outcome_id, tableBase, tableOutcome, stem) {
    cdm$outcome <- cdm[[tableOutcome]] %>%
      dplyr::filter(.data$cohort_definition_id == i)
    if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
+  inc <-estimateIncidence(
     cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome",
+    outcomeCohortId = i,
     interval = c("years","months"), repeatedEvents = FALSE, 
     completeDatabaseIntervals = FALSE, minCellCount = 5)
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   IncidencePrevalence::exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0(base_name,"_",stem,"_",i,"_NonVacc"),
@@ -201,8 +205,11 @@ calculate_IP <- function(base_id, outcome_id, tableBase, tableOutcome, stem) {
 base_cohorts_id <- c(1:4)
 outcome_cohorts_id <- c(1:27) # only outcomes
 for(i in base_cohorts_id) {
-  calculate_IP(i, outcome_cohorts_id, BaseCohortsName, LongCovidCohortsName, "LC")
+ calculate_IP(i, outcome_cohorts_id, BaseCohortsName, LongCovidCohortsName, "LC")
 }
+
+
+# from here
 outcome_cohorts_id <- c(1:11) # only outcomes
 for(i in base_cohorts_id) {
   calculate_IP(i, outcome_cohorts_id, BaseCohortsName, PascCohortsName, "PASC")
@@ -211,6 +218,8 @@ outcome_cohorts_id <- c(1:24) # only outcomes
 for(i in base_cohorts_id) {
   calculate_IP(i, outcome_cohorts_id, BaseCohortsName, MedCondCohortsName, "MC")
 }
+
+
 
 # ----------------------------------------------------------------
 # 1b: PASC, LC, MC, base cohorts on source population
@@ -234,12 +243,12 @@ calculate_IP_allpop <- function(outcome_id, date_to_consider, date_to_end, table
   cdm$outcome <- cdm[[tableOutcome]] %>%
     dplyr::filter(.data$cohort_definition_id == i)
   if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
-    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", 
+  inc <- estimateIncidence(
+    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", outcomeCohortId = i,
     interval = c("years","months"), repeatedEvents = FALSE, 
     completeDatabaseIntervals = FALSE, minCellCount = 5)
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0("Allpop_",stem,"_",i,"_AllandSex"), 
@@ -261,12 +270,12 @@ calculate_IP_allpop <- function(outcome_id, date_to_consider, date_to_end, table
     cdm$outcome <- cdm[[tableOutcome]] %>%
       dplyr::filter(.data$cohort_definition_id == i)
     if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
-    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", 
+  inc <- estimateIncidence(
+    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", outcomeCohortId = i,
     interval = c("years","months"),repeatedEvents = FALSE, 
     completeDatabaseIntervals = FALSE, minCellCount = 5)
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   IncidencePrevalence::exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0("Allpop_",stem,"_",i,"_Age"), 
@@ -289,12 +298,12 @@ calculate_IP_allpop <- function(outcome_id, date_to_consider, date_to_end, table
     cdm$outcome <- cdm[[tableOutcome]] %>%
       dplyr::filter(.data$cohort_definition_id == i)
     if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
-    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", 
+  inc <- estimateIncidence(
+    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", outcomeCohortId = i,
     interval = c("years","months"),repeatedEvents = FALSE, 
     completeDatabaseIntervals = FALSE, minCellCount = 5) 
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   IncidencePrevalence::exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0("Allpop_",stem,"_",i,"_Vacc"), 
@@ -314,12 +323,12 @@ calculate_IP_allpop <- function(outcome_id, date_to_consider, date_to_end, table
     cdm$outcome <- cdm[[tableOutcome]] %>%
       dplyr::filter(.data$cohort_definition_id == i)
     if(cdm$outcome %>% tally() %>% pull() != 0) {
-  inc <- IncidencePrevalence::estimateIncidence(
-    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome",
+  inc <- estimateIncidence(
+    cdm = cdm, denominatorTable = "denominator", outcomeTable = "outcome", outcomeCohortId = i,
     interval = c("years","months"), repeatedEvents = FALSE, 
     completeDatabaseIntervals = FALSE, minCellCount = 5)
 
-  study_results <- IncidencePrevalence::gatherIncidencePrevalenceResults(
+  study_results <- gatherIncidencePrevalenceResults(
     cdm=cdm, resultList=list(inc))
   IncidencePrevalence::exportIncidencePrevalenceResults(
     result=study_results, zipName=paste0("Allpop_",stem,"_",i,"_NonVacc"), 
@@ -334,5 +343,5 @@ calculate_IP_allpop <- function(outcome_id, date_to_consider, date_to_end, table
 calculate_IP_allpop(c(1:3), as.Date("2020-01-01"), as.Date(latest_data_availability), BaseCohortsName, "base")
 calculate_IP_allpop(4, as.Date("2017-01-01"), as.Date("2019-12-31"), BaseCohortsName, "base")
 calculate_IP_allpop(c(1:12), as.Date("2020-01-01"), as.Date(latest_data_availability), OverlapCohortsCName, "overlap_any")
-calculate_IP_allpop(c(1:236), as.Date("2020-01-01"), as.Date(latest_data_availability), OverlapCohortsIPName, "overlap")
+calculate_IP_allpop(c(69:236), as.Date("2020-01-01"), as.Date(latest_data_availability), OverlapCohortsIPName, "overlap")
 

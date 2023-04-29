@@ -82,7 +82,7 @@ do_exclusion <- function(cdm, cohort, id, databefore = TRUE,
                                          !!CDMConnector::dateadd("cohort_start_date",
                                                                  365)) %>%
       dplyr::mutate(end_covid_testing_date =  as.Date(.env$covid_end_date)) %>% # asked in the CodeToRun file
-      dplyr::left_join(observation_death, by = c("subject_id")) %>%
+      dplyr::left_join(observation_death, by = c("subject_id") , copy = T) %>%
       compute()
     
     cohort <- cohort %>% 
@@ -112,7 +112,7 @@ do_exclusion <- function(cdm, cohort, id, databefore = TRUE,
     cohort <- cohort %>% dplyr::mutate(one_year_date = 
                                          !!CDMConnector::dateadd("cohort_start_date", 365)) %>%
       dplyr::mutate(end_influenza_date =  as.Date("2019-12-31")) %>% # before Covid-19 pandemic
-      dplyr::left_join(observation_death, by = c("subject_id")) %>%
+      dplyr::left_join(observation_death, by = c("subject_id") , copy = T) %>%
       compute()
     cohort <- cohort %>% 
       dplyr::mutate(cohort_end_date = !!CDMConnector::asDate(ifelse(
@@ -138,7 +138,7 @@ do_exclusion <- function(cdm, cohort, id, databefore = TRUE,
     cohort <- cohort %>% dplyr::mutate(one_year_date = 
                                          !!CDMConnector::dateadd("cohort_start_date", 365)) %>%
       dplyr::mutate(end_covid_testing_date =  as.Date(.env$covid_end_date)) %>% # asked in the CodeToRun file
-      left_join(observation_death, by = c("subject_id")) %>%
+      left_join(observation_death, by = c("subject_id") , copy = T) %>%
       compute()
     cohort <- cohort %>% 
       dplyr::mutate(cohort_end_date = !!CDMConnector::asDate(ifelse(
@@ -224,7 +224,7 @@ do_overlap <- function(cdm, base_cohort_id, outcome_cohort_id, overlap_cohort_id
       outcome %>% 
         dplyr::select(subject_id, outcome_date = cohort_start_date, 
                       outcome_end = cohort_end_date),
-      by = "subject_id"
+      by = "subject_id", copy = T
     ) %>% distinct() %>% compute()
   attrition <- dplyr::tibble(
     number_observations = overlap %>% dplyr::tally() %>% dplyr::pull(),
@@ -333,7 +333,7 @@ do_overlap_LCany <- function(cdm, bases_cohort_id, outcomes_cohort_id, overlaps_
                                        %>% dplyr::pull(), reason = paste0("Washout 180 days outcome ", i)))
       
     }
-    outcome <- outcome %>% dplyr::full_join(outcome_next, by = c("subject_id", "cohort_definition_id", "cohort_start_date", "cohort_end_date")) %>% compute()
+    outcome <- outcome %>% dplyr::full_join(outcome_next, by = c("subject_id", "cohort_definition_id", "cohort_start_date", "cohort_end_date"), copy = T) %>% compute()
   }
   # As symptoms, end date equals start date
   outcome <- outcome %>% dplyr::mutate(cohort_end_date = .data$cohort_start_date) %>% compute()
@@ -353,7 +353,7 @@ do_overlap_LCany <- function(cdm, bases_cohort_id, outcomes_cohort_id, overlaps_
         outcome %>% 
           dplyr::select(subject_id, outcome_date = cohort_start_date, 
                         outcome_end = cohort_end_date),
-        by = "subject_id"
+        by = "subject_id", copy = T
       ) %>% compute()
     attrition <- rbind(attrition, 
                        dplyr::tibble(number_observations = overlap %>% dplyr::tally()
@@ -440,7 +440,7 @@ create_outcome <- function(cdm, window, filter_start = TRUE, first_event = TRUE,
       
     }
     
-    current <- current %>% dplyr::left_join(observation_death, by = c("subject_id")) %>%
+    current <- current %>% dplyr::left_join(observation_death, by = c("subject_id"), copy = T) %>%
       dplyr::mutate(cohort_end_date = !!CDMConnector::asDate(ifelse(!is.na(.data$death_date) & .data$observation_period_end_date > .data$death_date, .data$death_date, .data$observation_period_end_date))) %>%
       compute()
     
@@ -508,7 +508,7 @@ do_overlap_vacc <- function(base_id, new_id, tableName, tableold) {
     left_join(cdm[[VaccCohortsName]] %>%
                 dplyr::filter(cohort_definition_id == 1) %>% 
                 dplyr::select(subject_id, "vacc_date" = "cohort_start_date"),
-              by = "subject_id") %>%
+              by = "subject_id", copy = T) %>%
     dplyr::filter(cohort_start_date > vacc_date) %>% 
     dplyr::filter(!(is.na(vacc_date))) %>%
     dplyr::mutate(cohort_definition_id = new_id) %>%
@@ -519,7 +519,7 @@ do_overlap_vacc <- function(base_id, new_id, tableName, tableold) {
     left_join(cdm[[VaccCohortsName]] %>%
                 dplyr::filter(cohort_definition_id == 2) %>%
                 dplyr::select(subject_id, "vacc_end_date" = "cohort_end_date"),
-              by = "subject_id") %>%
+              by = "subject_id", copy = T) %>%
     dplyr::filter(vacc_end_date > cohort_start_date) %>%
     dplyr::mutate(cohort_end_date = ifelse(!is.na(vacc_end_date) & cohort_end_date > vacc_end_date, vacc_end_date, cohort_end_date)) %>%
     dplyr::mutate(cohort_definition_id = new_id+1) %>%

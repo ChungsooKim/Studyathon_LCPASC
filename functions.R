@@ -720,7 +720,7 @@ getLargeScaleCharacteristics <- function(cdm,
           "observation_period_start_date",
           "observation_period_end_date"
         ),
-      by = "person_id"
+      by = "person_id", copy = T
     ) %>%
     dplyr::compute()
   
@@ -765,7 +765,7 @@ getLargeScaleCharacteristics <- function(cdm,
     concept_id <- get_concept[[table_name]]
     # subset the table to the study subjects
     study_table <- cdm[[table_name]] %>%
-      dplyr::inner_join(subjects, by = "person_id") %>%
+      dplyr::inner_join(subjects, by = "person_id", copy  = T) %>%
       # rename start date
       dplyr::rename("start_date" = .env$start_date)
     # rename or create end date
@@ -782,7 +782,7 @@ getLargeScaleCharacteristics <- function(cdm,
       dplyr::left_join(
         cdm$concept %>%
           dplyr::select("concept_id", "concept_name"),
-        by = "concept_id"
+        by = "concept_id", copy  = T
       ) %>%
       # obtain observations inside the observation period only
       dplyr::filter(.data$start_date <= .data$observation_period_end_date) %>%
@@ -840,13 +840,13 @@ getLargeScaleCharacteristics <- function(cdm,
   # union all the tables into a temporal table
   for (i in 1:length(characterizedTable)) {
     if (i == 1) {
-      characterizedTables <- characterizedTable[[i]] %>%
-        dplyr::mutate(table_id = .env$i)
+      characterizedTables <- characterizedTable[[i]] %>% as.data.frame() %>%
+        dplyr::mutate(table_id = .env$i) %>% as_tibble()
     } else {
       characterizedTables <- characterizedTables %>%
         dplyr::union_all(
-          characterizedTable[[i]] %>%
-            dplyr::mutate(table_id = .env$i)
+          characterizedTable[[i]] %>% as.data.frame() %>%
+            dplyr::mutate(table_id = .env$i) %>% as_tibble()
         )
     }
   }
@@ -864,7 +864,8 @@ getLargeScaleCharacteristics <- function(cdm,
       ) %>%
       dplyr::inner_join(
         characterizedTables,
-        by = c("person_id", "cohort_start_date", "cohort_end_date")
+        by = c("person_id", "cohort_start_date", "cohort_end_date"),
+        copy = T
       ) %>%
       dplyr::group_by(.data$concept_id, .data$concept_name, .data$window_id, .data$table_id) %>%
       dplyr::tally() %>%
@@ -914,13 +915,13 @@ getLargeScaleCharacteristics <- function(cdm,
   
   
   result <- characterizedTables %>%
-    dplyr::left_join(tablesToCharacterize, by = "table_id") %>%
+    dplyr::left_join(tablesToCharacterize, by = "table_id", copy = T) %>%
     dplyr::left_join(denominatork,
                      by = c(
                        "window_id", "cohort_definition_id"
-                     )
+                     ), copy = T
     ) %>%
-    dplyr::left_join(temporalWindows, by = "window_id") %>%
+    dplyr::left_join(temporalWindows, by = "window_id", copy = T) %>%
     dplyr::select(
       "cohort_definition_id", "table_id", "table_name",
       "window_id", "window_name", "concept_id",

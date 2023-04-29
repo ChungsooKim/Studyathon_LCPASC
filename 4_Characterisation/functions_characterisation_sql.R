@@ -127,7 +127,32 @@ do_hu <- function(cohort_ids_interest, stem_name, tableName) {
     dplyr::mutate(time_trach = !!CDMConnector::datediff("last_trach", "cohort_start_date")) %>%
     dplyr::mutate(time_ecmo = !!CDMConnector::datediff("last_ecmo", "cohort_start_date")) %>%
     dplyr::select(dplyr::starts_with(c("number","time"))) %>%
-    dplyr::summarise(across(everything(), list(median = median, var = var, sum = sum))) %>%
+    dplyr::summarise(across(everything(), list(var = var, sum = sum))) %>%
+    dplyr::left_join(y = (cohorts_interest %>%
+                            dplyr::rename("number_gp" = "number_visit") %>%
+                            dplyr::ungroup() %>%
+                            dplyr::group_by(cohort_definition_id) %>%
+                            dplyr::mutate(time_GP = !!CDMConnector::datediff("last_gp", "cohort_start_date")) %>%
+                            dplyr::mutate(time_icu = !!CDMConnector::datediff("last_icu", "cohort_start_date")) %>%
+                            dplyr::mutate(time_vent = !!CDMConnector::datediff("last_vent", "cohort_start_date")) %>%
+                            dplyr::mutate(time_trach = !!CDMConnector::datediff("last_trach", "cohort_start_date")) %>%
+                            dplyr::mutate(time_ecmo = !!CDMConnector::datediff("last_ecmo", "cohort_start_date")) %>%
+                            dplyr::select(dplyr::starts_with(c("number","time"))) %>%
+                            dplyr::mutate(number_icu_median = median(number_icu),
+                                          number_vent_median = median(number_vent),
+                                          number_trach_median = median(number_trach),
+                                          number_ecmo_median = median(number_ecmo),
+                                          number_gp_median = median(number_gp),
+                                          time_GP_median = median(time_GP),
+                                          time_icu_median = median(time_icu),
+                                          time_vent_median = median(time_vent),
+                                          time_trach_median = median(time_trach),
+                                          time_ecmo_median = median(time_ecmo)) %>%
+                            dplyr::select(cohort_definition_id, number_icu_median, number_vent_median, number_trach_median,
+                                          number_ecmo_median, number_gp_median, time_GP_median, time_icu_median,
+                                          time_vent_median, time_trach_median, time_ecmo_median) %>% distinct()
+                          ),
+                     by = 'cohort_definition_id', copy = T) %>%
     compute()
   
   write.csv(

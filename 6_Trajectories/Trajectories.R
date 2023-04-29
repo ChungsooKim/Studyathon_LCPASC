@@ -57,7 +57,7 @@ if ((doCharacterisation || doClustering) && doTrajectories && vaccine_data) {
 }
 
 # Setting local system & database parameters - CHANGE ACCORDING TO YOUR SYSTEM & DATABASE:
-trajectoryLocalArgs <- Trajectories::createTrajectoryLocalArgs(oracleTempSchema="",
+trajectoryLocalArgs <- Trajectories::createTrajectoryLocalArgs(oracleTempSchema=NULL,
                                                                prefixForResultTableNames = paste0(table_stem,"_traj"), 
                                                                cdmDatabaseSchema = cdm_database_schema,
                                                                vocabDatabaseSchema =vocabulary_database_schema,

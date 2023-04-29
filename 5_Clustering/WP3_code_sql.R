@@ -85,7 +85,7 @@ symptoms_LC <- symptoms_LC %>%
   dplyr::select(cohort_name,subject_id,age,sex)
 
 # Get the names of the symptoms or LC code
-names_symptoms <- symptoms_LC %>% dplyr::select(cohort_name) %>% distinct() %>% 
+names_symptoms <- symptoms_LC %>% dplyr::select(cohort_name) %>% filter(!is.na(cohort_name)) %>% distinct() %>% 
   pull()
 
 # Create table with columns of symptoms, 1 if individual has it, 0 otherwise
@@ -103,20 +103,20 @@ for(i in 2:length(names_symptoms)) {
                                        dplyr::filter(cohort_name == !!working_name) %>% 
                                        dplyr::mutate(!!working_name := as.integer(1)) %>% 
                                        dplyr::select(subject_id,!!working_name), 
-                                     by = c("subject_id"))
+                                     by = c("subject_id"), copy = T)
   
 }
 data_LCA[is.na(data_LCA)] <- 0
 data_LCA <- data_LCA %>% distinct()
-data_LCA <- data_LCA %>% dplyr::left_join(symptoms_LC %>% 
-                                     dplyr::select(subject_id,age,sex), 
-                                   by = "subject_id") %>%
-  distinct()
+a = symptoms_LC %>% dplyr::select(subject_id,age,sex) %>% arrange(subject_id, age) 
+a = a[!duplicated(a$subject_id),]
+
+data_LCA <- data_LCA %>% dplyr::left_join(a , by = "subject_id") %>% distinct()
 
 # Use package polCA
 # Fit latent class model
 mydata <- data_LCA 
-mydata[,2:(ncol(mydata)-2)] <- mydata[,2:(ncol(mydata)-2)] + 1 
+mydata[,2:(ncol(mydata)-2)] <- as.data.frame(mydata[,2:(ncol(mydata)-2)]) + 1 
 # needed for poLCA, now 0 (no symptom) is 1, and 1 (symptom) is 2. Not do that in age or sex or subject_id
 # the following is just to create variables that can be read by the formula of LCA
 n_s <- names_symptoms
@@ -365,7 +365,32 @@ HU_summary <- cohort_LC %>%
   dplyr::mutate(time_trach = !!CDMConnector::datediff("last_trach", "cohort_start_date")) %>%
   dplyr::mutate(time_ecmo = !!CDMConnector::datediff("last_ecmo", "cohort_start_date")) %>%
   dplyr::select(dplyr::starts_with(c("number","time"))) %>%
-  dplyr::summarise(across(everything(), list(median = median, var = var, sum = sum))) %>%
+  dplyr::summarise(across(everything(), list(var = var, sum = sum))) %>%
+  dplyr::left_join(y = (cohort_LC %>%
+                          dplyr::rename("number_gp" = "number_visit") %>%
+                          dplyr::ungroup() %>%
+                          dplyr::group_by(cluster_assignment) %>%
+                          dplyr::mutate(time_GP = !!CDMConnector::datediff("last_gp", "cohort_start_date")) %>%
+                          dplyr::mutate(time_icu = !!CDMConnector::datediff("last_icu", "cohort_start_date")) %>%
+                          dplyr::mutate(time_vent = !!CDMConnector::datediff("last_vent", "cohort_start_date")) %>%
+                          dplyr::mutate(time_trach = !!CDMConnector::datediff("last_trach", "cohort_start_date")) %>%
+                          dplyr::mutate(time_ecmo = !!CDMConnector::datediff("last_ecmo", "cohort_start_date")) %>%
+                          dplyr::select(dplyr::starts_with(c("number","time"))) %>%
+                          dplyr::mutate(number_icu_median = median(number_icu),
+                                        number_vent_median = median(number_vent),
+                                        number_trach_median = median(number_trach),
+                                        number_ecmo_median = median(number_ecmo),
+                                        number_gp_median = median(number_gp),
+                                        time_GP_median = median(time_GP),
+                                        time_icu_median = median(time_icu),
+                                        time_vent_median = median(time_vent),
+                                        time_trach_median = median(time_trach),
+                                        time_ecmo_median = median(time_ecmo)) %>%
+                          dplyr::select(cluster_assignment, number_icu_median, number_vent_median, number_trach_median,
+                                        number_ecmo_median, number_gp_median, time_GP_median, time_icu_median,
+                                        time_vent_median, time_trach_median, time_ecmo_median) %>% distinct()
+  ),
+  by = 'cluster_assignment', copy = T) %>%
   compute()
 
 write.csv(
@@ -443,7 +468,7 @@ info(logger, '-- Visualising network and looking at community detection')
 
 # Number of people with each symptom
 number_people <- data_LCA %>% dplyr::select(-c(subject_id,age,sex)) %>% 
-  summarise(across(,sum)) %>%  unlist(., use.names=FALSE)
+  summarise(across(everything(),sum)) %>%  unlist(., use.names=FALSE)
 
 # HERE I DO PHI COEFFICIENT (MAKES SENSE FOR BINATY VARIABLES), EVEN THOUGH WE CANNOT ACCOUNT FOR OTHER COVARIATES AT THE SAME TIME
 # Could also use other distance measures for dichotomous variables like https://docs.scipy.org/doc/scipy/reference/spatial.distance.html

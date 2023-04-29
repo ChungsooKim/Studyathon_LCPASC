@@ -868,7 +868,7 @@ if(doTrajectories) {
     compute()
   computeQuery(traj_table, name = TrajCohortsName,  
                temporary = FALSE,
-               schema = results_database_schema, overwrite = TRUE)
+               schema = 'dbo', overwrite = TRUE)
   
   names_final_cohorts <- rbind(names_final_cohorts,
                                dplyr::tibble(table_name = TrajCohortsName,

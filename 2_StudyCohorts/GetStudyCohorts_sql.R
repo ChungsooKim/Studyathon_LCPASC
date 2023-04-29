@@ -91,7 +91,7 @@ if(vaccine_data && db.name != "CPRDGold") {
     
     vacc_all <- dplyr::union_all(vaccinated, nonvaccinated, vaccinated_first, vaccinated_second, vaccinated_third)
     
-    computeQuery(vacc_all, name = VaccCohortsName,  temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+    computeQuery(vacc_all, name = VaccCohortsName,  temporary = FALSE, schema = 'dbo', overwrite = TRUE)
     
     names_final_cohorts <- rbind(names_final_cohorts,
                                  dplyr::tibble(table_name = VaccCohortsName,
@@ -161,7 +161,7 @@ if(vaccine_data && db.name != "CPRDGold") {
     
     vacc_all <- dplyr::union_all(vaccinated, nonvaccinated, vaccinated_first, vaccinated_second, vaccinated_third)
     
-    computeQuery(vacc_all, name = VaccCohortsName,  temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+    computeQuery(vacc_all, name = VaccCohortsName,  temporary = FALSE, schema = 'dbo', overwrite = TRUE)
     
     names_final_cohorts <- rbind(names_final_cohorts,
                                  dplyr::tibble(table_name = VaccCohortsName,
@@ -243,7 +243,7 @@ if(vaccine_data && db.name != "CPRDGold") {
   
   vacc_all <- dplyr::union_all(vaccinated, nonvaccinated, vaccinated_first, vaccinated_second, vaccinated_third)
   
-  computeQuery(vacc_all, name = VaccCohortsName,  temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+  computeQuery(vacc_all, name = VaccCohortsName,  temporary = FALSE, schema = 'dbo', overwrite = TRUE)
   
   names_final_cohorts <- rbind(names_final_cohorts,
                                dplyr::tibble(table_name = VaccCohortsName,
@@ -258,7 +258,7 @@ cdm <- cdmFromCon(db, cdm_database_schema, writeSchema = results_database_schema
 
 # ---------------------------------------------------------------------
 # BASE COHORTS
-
+names_final_cohorts = data.frame()
 message("Getting base cohorts")
 info(logger, '-- Getting base cohorts')
 
@@ -393,7 +393,7 @@ if(doTreatmentPatterns) {
 computeQuery(bases,
              name = BaseCohortsName,
              temporary = FALSE,
-             schema = results_database_schema,
+             schema = 'dbo',
              overwrite = TRUE)
 
 cdm <- cdmFromCon(db, cdm_database_schema, writeSchema = results_database_schema,
@@ -439,7 +439,7 @@ names_final_cohorts <- rbind(names_final_cohorts,
 # LC code
 table_lccode <- create_outcome(cdm, window = 101, new_ids = 27, tableName = LongCovidCohortsName)
 
-computeQuery(dplyr::union_all(table_lc, table_lccode), LongCovidCohortsName, schema = results_database_schema, temporary = FALSE, overwrite = TRUE)
+computeQuery(dplyr::union_all(table_lc, table_lccode), LongCovidCohortsName, schema = 'dbo', temporary = FALSE, overwrite = TRUE)
 
 names_final_cohorts <- rbind(names_final_cohorts,
                              dplyr::tibble(table_name = LongCovidCohortsName,
@@ -463,7 +463,7 @@ names_final_cohorts <- rbind(names_final_cohorts,
                              dplyr::tibble(table_name = PascCohortsName,
                                            cohort_definition_id = 11, cohort_name = "Any PASC event"))
 
-computeQuery(table_pasc, PascCohortsName, temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+computeQuery(table_pasc, PascCohortsName, temporary = FALSE, schema = 'dbo', overwrite = TRUE)
 
 
 # Medical conditions
@@ -475,7 +475,7 @@ names_final_cohorts <- rbind(names_final_cohorts,
                                            cohort_definition_id = c(1:24),
                                            cohort_name = Initial_cohorts$cohort_name[40:63]))
 
-computeQuery(table_mc, MedCondCohortsName, temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+computeQuery(table_mc, MedCondCohortsName, temporary = FALSE, schema = 'dbo', overwrite = TRUE)
 
 
 cdm <- cdmFromCon(db, cdm_database_schema, writeSchema = results_database_schema,
@@ -749,7 +749,7 @@ names_final_cohorts <- rbind(names_final_cohorts,
 
 if(doTreatmentPatterns) {
   overlaplc_tp <- create_outcome(cdm, window = c(68:99), filter_start = FALSE, first_event = FALSE,
-                              new_ids = c(181:212), tableName = OverlapCohortsCName, tableold = overlaplc)  
+                              new_ids = c(181:212), tableName = OverlapCohortsCName)  
   
   overlaplc <- dplyr::union_all(overlaplc, overlaplc_tp)
   
@@ -760,11 +760,14 @@ if(doTreatmentPatterns) {
   
 }
 
-computeQuery(overlaplc, name = OverlapCohortsCName,  temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+# -------------- restart here 
+
+
+computeQuery(overlaplc, name = OverlapCohortsCName,  temporary = FALSE, schema = 'dbo', overwrite = TRUE)
 
 cdm <- cdmFromCon(db, cdm_database_schema, writeSchema = results_database_schema,
                   cohortTables = c(InitialCohortsName,BaseCohortsName,LongCovidCohortsName,
-                                   PascCohortsName,MedCondCohortsName,VaccCohortsName,OverlapCohortsCName))
+                                   PascCohortsName,MedCondCohortsName,OverlapCohortsCName))
 
 # ---------------------------------------------------------------------
 # OVERLAPPING COHORTS INCIDENCE
@@ -782,7 +785,7 @@ if(cdm[[LongCovidCohortsName]] %>%
                                              cohort_name =paste0("Base_",1,"_LC_outcome_",1) ))
   cdm <- cdmFromCon(db, cdm_database_schema, writeSchema = results_database_schema,
                     cohortTables = c(InitialCohortsName,BaseCohortsName,LongCovidCohortsName,
-                                     PascCohortsName,MedCondCohortsName,VaccCohortsName,OverlapCohortsCName,
+                                     PascCohortsName,MedCondCohortsName,OverlapCohortsCName,
                                      OverlapCohortsIPName))
   counter <- counter + 1
   
@@ -846,7 +849,7 @@ for(i in base_ids) {
   }
 }
 
-computeQuery(overlapip, name = OverlapCohortsIPName,  temporary = FALSE, schema = results_database_schema, overwrite = TRUE)
+computeQuery(overlapip, name = OverlapCohortsIPName,  temporary = FALSE, schema = 'dbo', overwrite = TRUE)
 
 if(vaccine_data) {
   cdm <- cdmFromCon(db, cdm_database_schema, writeSchema = results_database_schema,
@@ -872,7 +875,7 @@ if(doCharacterisation || doClustering) {
                                          name = HUCohortsName,
                                          overwrite = TRUE)
   cdm[[HUCohortsName]] <- cdm[[HUCohortsName]] %>% left_join(observation_death, 
-                                                             by = c("subject_id")) %>%
+                                                             by = c("subject_id"), copy = T) %>%
     dplyr::mutate(cohort_end_date = !!CDMConnector::asDate(ifelse(!is.na(.data$death_date) & .data$observation_period_end_date > .data$death_date, .data$death_date, .data$observation_period_end_date))) %>%
     compute()
   names_final_cohorts <- rbind(names_final_cohorts,
@@ -882,6 +885,8 @@ if(doCharacterisation || doClustering) {
   
 }
 
+#---------here
+
 if(doTrajectories) {
   # Save the "any LC symptom + infection" or "infection + LC code" cohort in a table which can be read by Trajectories package
   traj_table <- cdm[[OverlapCohortsCName]] %>%
@@ -890,7 +895,7 @@ if(doTrajectories) {
     compute()
   computeQuery(traj_table, name = TrajCohortsName,  
                temporary = FALSE,
-               schema = results_database_schema, overwrite = TRUE)
+               schema = 'dbo', overwrite = TRUE)
   
   names_final_cohorts <- rbind(names_final_cohorts,
                                dplyr::tibble(table_name = TrajCohortsName,
